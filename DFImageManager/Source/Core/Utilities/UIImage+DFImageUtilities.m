@@ -79,55 +79,23 @@
         imageSize = CGSizeMake(imageSize.width * scale, imageSize.height * scale);
     }
     
-    CGRect imageRect = (CGRect){.origin = CGPointZero, .size = imageSize};
-    
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGBitmapInfo bitmapInfo = CGImageGetBitmapInfo(imageRef);
-    
-    int infoMask = (bitmapInfo & kCGBitmapAlphaInfoMask);
-    BOOL anyNonAlpha = (infoMask == kCGImageAlphaNone ||
-                        infoMask == kCGImageAlphaNoneSkipFirst ||
-                        infoMask == kCGImageAlphaNoneSkipLast);
-    
-    // CGBitmapContextCreate doesn't support kCGImageAlphaNone with RGB.
-    // https://developer.apple.com/library/mac/#qa/qa1037/_index.html
-    if (infoMask == kCGImageAlphaNone && CGColorSpaceGetNumberOfComponents(colorSpace) > 1) {
-        // Unset the old alpha info.
-        bitmapInfo &= ~kCGBitmapAlphaInfoMask;
-        
-        // Set noneSkipFirst.
-        bitmapInfo |= kCGImageAlphaNoneSkipFirst;
+    CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateDeviceRGB();
+    CGContextRef contextRef = CGBitmapContextCreate(NULL, (size_t)imageSize.width, (size_t)imageSize.height, CGImageGetBitsPerComponent(imageRef), 0, colorSpaceRef, (kCGBitmapByteOrderDefault | kCGImageAlphaPremultipliedFirst));
+    if (colorSpaceRef) {
+        CGColorSpaceRelease(colorSpaceRef);
     }
-    // Some PNGs tell us they have alpha but only 3 components. Odd.
-    else if (!anyNonAlpha && CGColorSpaceGetNumberOfComponents(colorSpace) == 3) {
-        // Unset the old alpha info.
-        bitmapInfo &= ~kCGBitmapAlphaInfoMask;
-        bitmapInfo |= kCGImageAlphaPremultipliedFirst;
-    }
-    
-    // It calculates the bytes-per-row based on the bitsPerComponent and width arguments.
-    CGContextRef context = CGBitmapContextCreate(NULL,
-                                                 (size_t)imageSize.width,
-                                                 (size_t)imageSize.height,
-                                                 CGImageGetBitsPerComponent(imageRef),
-                                                 0,
-                                                 colorSpace,
-                                                 bitmapInfo);
-    CGColorSpaceRelease(colorSpace);
-    
-    // If failed, return original image
-    if (!context) {
+    if (!contextRef) {
         return image;
     }
     
-    CGContextDrawImage(context, imageRect, imageRef);
-    CGImageRef df_decompressedImageRef = CGBitmapContextCreateImage(context);
-    
-    CGContextRelease(context);
-    
-    UIImage *df_decompressedImage = [UIImage imageWithCGImage:df_decompressedImageRef scale:image.scale orientation:image.imageOrientation];
-    CGImageRelease(df_decompressedImageRef);
-    return df_decompressedImage;
+    CGContextDrawImage(contextRef, (CGRect){CGPointZero, imageSize}, imageRef);
+    CGImageRef decompressedImageRef = CGBitmapContextCreateImage(contextRef);
+    CGContextRelease(contextRef);
+    UIImage *decompressedImage = [UIImage imageWithCGImage:decompressedImageRef scale:image.scale orientation:image.imageOrientation];
+    if (decompressedImageRef) {
+        CGImageRelease(decompressedImageRef);
+    }
+    return decompressedImage;
 }
 
 + (UIImage *)df_croppedImage:(UIImage *)image normalizedCropRect:(CGRect)inputCropRect {
