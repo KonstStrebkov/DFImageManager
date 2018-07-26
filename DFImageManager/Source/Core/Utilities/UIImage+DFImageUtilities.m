@@ -88,6 +88,12 @@
         return image;
     }
     
+    if (@available(iOS 10.0, *)) {
+        if (scale < 1.f) {
+            CGContextSetInterpolationQuality(contextRef, kCGInterpolationMedium);
+        }
+    }
+    
     CGContextDrawImage(contextRef, (CGRect){CGPointZero, imageSize}, imageRef);
     CGImageRef decompressedImageRef = CGBitmapContextCreateImage(contextRef);
     CGContextRelease(contextRef);
