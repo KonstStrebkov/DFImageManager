@@ -11,13 +11,17 @@
 
 @class DFImageRequest;
 
+NS_ASSUME_NONNULL_BEGIN
+
 typedef void (^DFImageRequestCachingCompletionHandler)(UIImage *__nullable image);
 
 
 @protocol DFImageRequestCaching <NSObject>
 
-- (NSOperation *)loadCachedImageWithRequest:(nonnull DFImageRequest *)request completion:(nullable DFImageRequestCachingCompletionHandler)completion;
+- (nullable NSOperation *)loadCachedImageWithRequest:(DFImageRequest *)request completion:(nullable DFImageRequestCachingCompletionHandler)completion;
 
-- (void)saveCachedImage:(nonnull UIImage *)image withRequest:(nonnull DFImageRequest *)request;
+- (void)saveCachedImage:(UIImage *)image withRequest:(DFImageRequest *)request;
 
 @end
+
+NS_ASSUME_NONNULL_END
