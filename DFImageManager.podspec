@@ -45,7 +45,7 @@ Pod::Spec.new do |s|
 
     s.subspec "GIF" do |ss|
         ss.dependency "DFImageManager/Core"
-        ss.dependency "FLAnimatedImage", "~> 1.0"
+        ss.dependency "FLAnimatedImage", :git => "https://github.com/KonstStrebkov/FLAnimatedImage.git", :tag => "1.0.15"
         ss.source_files = "DFImageManager/Source/GIF/**/*.{h,m}"
     end
 
